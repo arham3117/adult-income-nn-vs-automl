@@ -1,0 +1,5 @@
+{
+  "winner": "automl_flaml",
+  "selected_estimator": "xgb_limitdepth",
+  "nn_config_name": "C3-wide"
+}

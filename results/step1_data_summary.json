@@ -1,0 +1,88 @@
+{
+  "seed": 42,
+  "cleaning": {
+    "rows_raw": 48842,
+    "label_values_after_normalisation": [
+      "<=50K",
+      ">50K"
+    ],
+    "rows_after_label_filter": 48842,
+    "missing_per_column": {
+      "workclass": 2799,
+      "occupation": 2809,
+      "native-country": 857
+    },
+    "duplicate_rows_dropped": 52,
+    "rows_final": 48790,
+    "dropped_columns": [
+      "fnlwgt",
+      "education"
+    ]
+  },
+  "split_scheme": "60% train / 20% validation / 20% test, stratified on income",
+  "splits": {
+    "train": {
+      "n": 29274,
+      "n_le_50k": 22265,
+      "n_gt_50k": 7009,
+      "pct_gt_50k": 23.943
+    },
+    "val": {
+      "n": 9758,
+      "n_le_50k": 7422,
+      "n_gt_50k": 2336,
+      "pct_gt_50k": 23.939
+    },
+    "test": {
+      "n": 9758,
+      "n_le_50k": 7422,
+      "n_gt_50k": 2336,
+      "pct_gt_50k": 23.939
+    },
+    "total": {
+      "n": 48790,
+      "n_le_50k": 37109,
+      "n_gt_50k": 11681,
+      "pct_gt_50k": 23.941
+    }
+  },
+  "n_features_raw": 12,
+  "n_features_after_encoding": 91,
+  "numeric_features": [
+    "age",
+    "education-num",
+    "capital-gain",
+    "capital-loss",
+    "hours-per-week"
+  ],
+  "categorical_features": [
+    "workclass",
+    "marital-status",
+    "occupation",
+    "relationship",
+    "race",
+    "sex",
+    "native-country"
+  ],
+  "categories_per_categorical_feature": {
+    "workclass": 8,
+    "marital-status": 7,
+    "occupation": 14,
+    "relationship": 6,
+    "race": 5,
+    "sex": 2,
+    "native-country": 41
+  },
+  "preprocessing_decisions": [
+    "Merged adult.data and adult.test into one pool, then re-split ourselves so that train/val/test come from an identical distribution and the split is reproducible.",
+    "Stripped whitespace on all string columns and removed the trailing '.' that adult.test appends to its labels.",
+    "Mapped the target to binary: '<=50K' -> 0, '>50K' -> 1.",
+    "Dropped ['fnlwgt', 'education']: fnlwgt is a census sampling weight (a survey design artefact, not a person-level predictor); education is a string duplicate of the ordinal education-num.",
+    "Dropped 52 exact duplicate rows to avoid the same record appearing in both train and test.",
+    "'?' tokens were read as NaN and imputed with an explicit 'Missing' category rather than the mode, because missingness in workclass/occupation is informative (it co-occurs with 'Never-worked'/retired respondents).",
+    "Numeric features: median imputation (robust to the heavy right skew of capital-gain) followed by StandardScaler, which matters for gradient descent.",
+    "Categorical features: OneHotEncoder(handle_unknown='ignore') so an unseen category at inference yields an all-zero block instead of an error.",
+    "The ColumnTransformer is fit on the training split only; validation and test are transformed with those fitted statistics to prevent data leakage.",
+    "Kept capital-gain/capital-loss despite ~91% zeros: they are among the strongest signals for the >50K class."
+  ]
+}

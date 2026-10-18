@@ -1,0 +1,287 @@
+{
+  "comparison_table": [
+    {
+      "metric": "Test accuracy",
+      "nn_step2_baseline": 0.8541,
+      "neural_network": 0.8545,
+      "automl_flaml": 0.8722
+    },
+    {
+      "metric": "Test precision",
+      "nn_step2_baseline": 0.731,
+      "neural_network": 0.75,
+      "automl_flaml": 0.7779
+    },
+    {
+      "metric": "Test recall",
+      "nn_step2_baseline": 0.6177,
+      "neural_network": 0.5882,
+      "automl_flaml": 0.6524
+    },
+    {
+      "metric": "Test F1",
+      "nn_step2_baseline": 0.6696,
+      "neural_network": 0.6593,
+      "automl_flaml": 0.7097
+    },
+    {
+      "metric": "Test ROC-AUC",
+      "nn_step2_baseline": 0.9104,
+      "neural_network": 0.911,
+      "automl_flaml": 0.9277
+    },
+    {
+      "metric": "Final-model fit time (s)",
+      "nn_step2_baseline": 1.96,
+      "neural_network": 2.83,
+      "automl_flaml": 6.36
+    },
+    {
+      "metric": "Total search time (s)",
+      "nn_step2_baseline": 1.96,
+      "neural_network": 30.09,
+      "automl_flaml": 300.1
+    },
+    {
+      "metric": "Model file size (KB)",
+      "nn_step2_baseline": 82.0,
+      "neural_network": 701.5,
+      "automl_flaml": 14186.8
+    },
+    {
+      "metric": "Deployable size incl. preprocessing (KB)",
+      "nn_step2_baseline": 88.1,
+      "neural_network": 707.6,
+      "automl_flaml": 14192.3
+    },
+    {
+      "metric": "Full pickled search object (KB)",
+      "nn_step2_baseline": "n/a",
+      "neural_network": "n/a",
+      "automl_flaml": 34610.7
+    },
+    {
+      "metric": "Latency, single row (ms, mean)",
+      "nn_step2_baseline": 1.1574,
+      "neural_network": 1.2097,
+      "automl_flaml": 3.4567
+    },
+    {
+      "metric": "Latency, single row (ms, p95)",
+      "nn_step2_baseline": 1.2642,
+      "neural_network": 1.3715,
+      "automl_flaml": 3.7955
+    },
+    {
+      "metric": "Latency, batch of 9,758 (ms, mean)",
+      "nn_step2_baseline": 7.2532,
+      "neural_network": 9.9448,
+      "automl_flaml": 65.0028
+    },
+    {
+      "metric": "Throughput, batch (rows/s)",
+      "nn_step2_baseline": 1345337,
+      "neural_network": 981216,
+      "automl_flaml": 150117
+    },
+    {
+      "metric": "Trainable parameters / trees",
+      "nn_step2_baseline": 20097,
+      "neural_network": 178689,
+      "automl_flaml": 2770
+    }
+  ],
+  "neural_network": {
+    "config_name": "C3-wide",
+    "config": {
+      "name": "C3-wide",
+      "hidden_sizes": [
+        512,
+        256
+      ],
+      "dropout": 0.3,
+      "batch_norm": false,
+      "lr": 0.001,
+      "weight_decay": 0.0,
+      "batch_size": 256,
+      "max_epochs": 100,
+      "early_stopping": true,
+      "patience": 10,
+      "optimizer": "adam",
+      "note": "Width sweep: ~10x more parameters."
+    },
+    "test_metrics": {
+      "accuracy": 0.8544783767165403,
+      "precision": 0.75,
+      "recall": 0.5881849315068494,
+      "f1": 0.6593090211132437,
+      "roc_auc": 0.9110238201035058,
+      "confusion_matrix": {
+        "tn": 6964,
+        "fp": 458,
+        "fn": 962,
+        "tp": 1374
+      },
+      "threshold": 0.5
+    },
+    "baseline_step2_test_metrics": {
+      "accuracy": 0.8540684566509531,
+      "precision": 0.7310030395136778,
+      "recall": 0.617722602739726,
+      "f1": 0.6696055684454756,
+      "roc_auc": 0.910393866762273,
+      "confusion_matrix": {
+        "tn": 6891,
+        "fp": 531,
+        "fn": 893,
+        "tp": 1443
+      },
+      "threshold": 0.5
+    },
+    "latency_single_row": {
+      "mean_ms": 1.2097,
+      "median_ms": 1.1775,
+      "p95_ms": 1.3715,
+      "std_ms": 0.0981,
+      "n": 200
+    },
+    "latency_batch": {
+      "mean_ms": 9.9448,
+      "median_ms": 9.8279,
+      "p95_ms": 10.4671,
+      "std_ms": 0.2784,
+      "n": 20
+    },
+    "model_bytes": 718301,
+    "preprocessor_bytes": 6240,
+    "deployable_bytes": 724541,
+    "final_fit_time_s": 2.828,
+    "total_search_time_s": 30.090000000000003
+  },
+  "automl": {
+    "framework": "FLAML",
+    "selected_estimator": "xgb_limitdepth",
+    "hyperparameters": {
+      "n_estimators": 2770,
+      "max_depth": 7,
+      "min_child_weight": 0.09334064712939191,
+      "learning_rate": 0.006200219332923492,
+      "subsample": 0.9960500864194881,
+      "colsample_bylevel": 0.8155116309985395,
+      "colsample_bytree": 0.4012180435147734,
+      "reg_alpha": 0.008095607070800785,
+      "reg_lambda": 0.0665179393932735
+    },
+    "test_metrics": {
+      "accuracy": 0.8722074195531871,
+      "precision": 0.777947932618683,
+      "recall": 0.6523972602739726,
+      "f1": 0.7096623981373691,
+      "roc_auc": 0.9277450381225015,
+      "confusion_matrix": {
+        "tn": 6987,
+        "fp": 435,
+        "fn": 812,
+        "tp": 1524
+      },
+      "threshold": 0.5
+    },
+    "latency_single_row": {
+      "mean_ms": 3.4567,
+      "median_ms": 3.3865,
+      "p95_ms": 3.7955,
+      "std_ms": 0.1832,
+      "n": 200
+    },
+    "latency_batch": {
+      "mean_ms": 65.0028,
+      "median_ms": 64.5035,
+      "p95_ms": 67.5622,
+      "std_ms": 1.4156,
+      "n": 20
+    },
+    "model_bytes": 14527235,
+    "deployable_bytes": 14532929,
+    "final_fit_time_s": 6.362,
+    "total_search_time_s": 300.1,
+    "full_search_object_bytes": 35441369,
+    "test_metrics_without_dtype_pinning": {
+      "accuracy": 0.8710801393728222,
+      "precision": 0.7649950835791544,
+      "recall": 0.666095890410959,
+      "f1": 0.7121281464530892,
+      "roc_auc": 0.9266351505428142,
+      "confusion_matrix": {
+        "tn": 6944,
+        "fp": 478,
+        "fn": 780,
+        "tp": 1556
+      },
+      "threshold": 0.5
+    },
+    "dtype_pinning_note": "FLAML's DataTransformer re-derives Categorical levels per call, so un-pinned single-row inference is silently wrong and the batch score is slightly off. Pinning the training-time dtypes fixes both: test ROC-AUC 0.9266 -> 0.9277."
+  },
+  "neural_network_step2_baseline": {
+    "config": {
+      "name": "baseline",
+      "hidden_sizes": [
+        128,
+        64
+      ],
+      "dropout": 0.3,
+      "batch_norm": false,
+      "lr": 0.001,
+      "weight_decay": 0.0,
+      "batch_size": 256,
+      "max_epochs": 100,
+      "early_stopping": true,
+      "patience": 10,
+      "optimizer": "adam",
+      "note": "Two hidden layers, Adam, BCEWithLogitsLoss, early stopping on validation loss."
+    },
+    "test_metrics": {
+      "accuracy": 0.8540684566509531,
+      "precision": 0.7310030395136778,
+      "recall": 0.617722602739726,
+      "f1": 0.6696055684454756,
+      "roc_auc": 0.910393866762273,
+      "confusion_matrix": {
+        "tn": 6891,
+        "fp": 531,
+        "fn": 893,
+        "tp": 1443
+      },
+      "threshold": 0.5
+    },
+    "latency_single_row": {
+      "mean_ms": 1.1574,
+      "median_ms": 1.137,
+      "p95_ms": 1.2642,
+      "std_ms": 0.055,
+      "n": 200
+    },
+    "latency_batch": {
+      "mean_ms": 7.2532,
+      "median_ms": 7.2303,
+      "p95_ms": 7.6813,
+      "std_ms": 0.2125,
+      "n": 20
+    },
+    "model_bytes": 84009,
+    "deployable_bytes": 90249,
+    "fit_time_s": 1.959,
+    "n_params": 20097
+  },
+  "step2_vs_automl": {
+    "roc_auc_margin": 0.01735,
+    "f1_margin": 0.04006,
+    "accuracy_margin": 0.01814,
+    "automl_slower_x": 3.0,
+    "automl_larger_x": 161.0
+  },
+  "winner": "automl_flaml",
+  "roc_auc_margin": 0.01672,
+  "seed_noise_band_roc_auc": 0.0006,
+  "margin_exceeds_seed_noise": true,
+  "selection_rule": "Primary criterion: test ROC-AUC (threshold-independent and robust to the 24/76 class imbalance). F1 is used as a tie-break, then deployable size and latency."
+}

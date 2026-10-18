@@ -1,0 +1,176 @@
+{
+  "health": {
+    "status": "ok",
+    "model_kind": "flaml",
+    "winner": "automl_flaml",
+    "estimator": "xgb_limitdepth",
+    "test_roc_auc": 0.9277
+  },
+  "samples": [
+    {
+      "label": "1. Young clerical worker, low hours",
+      "request": {
+        "age": 25,
+        "workclass": "Private",
+        "education-num": 9,
+        "marital-status": "Never-married",
+        "occupation": "Other-service",
+        "relationship": "Own-child",
+        "race": "White",
+        "sex": "Female",
+        "capital-gain": 0,
+        "capital-loss": 0,
+        "hours-per-week": 25,
+        "native-country": "United-States"
+      },
+      "response": {
+        "prediction": "<=50K",
+        "predicted_class": 0,
+        "probability_gt_50k": 0.000495,
+        "probability_le_50k": 0.999505,
+        "confidence": 0.999505,
+        "threshold": 0.5,
+        "input_warnings": {},
+        "server_latency_ms": 4.677
+      },
+      "client_latency_ms": 5.946
+    },
+    {
+      "label": "2. Senior executive, married, long hours",
+      "request": {
+        "age": 52,
+        "workclass": "Self-emp-inc",
+        "education-num": 14,
+        "marital-status": "Married-civ-spouse",
+        "occupation": "Exec-managerial",
+        "relationship": "Husband",
+        "race": "White",
+        "sex": "Male",
+        "capital-gain": 15024,
+        "capital-loss": 0,
+        "hours-per-week": 60,
+        "native-country": "United-States"
+      },
+      "response": {
+        "prediction": ">50K",
+        "predicted_class": 1,
+        "probability_gt_50k": 0.999601,
+        "probability_le_50k": 0.000399,
+        "confidence": 0.999601,
+        "threshold": 0.5,
+        "input_warnings": {},
+        "server_latency_ms": 4.083
+      },
+      "client_latency_ms": 5.4
+    },
+    {
+      "label": "3. Mid-career professional, doctorate",
+      "request": {
+        "age": 41,
+        "workclass": "Federal-gov",
+        "education-num": 16,
+        "marital-status": "Married-civ-spouse",
+        "occupation": "Prof-specialty",
+        "relationship": "Husband",
+        "race": "Asian-Pac-Islander",
+        "sex": "Male",
+        "capital-gain": 0,
+        "capital-loss": 1902,
+        "hours-per-week": 45,
+        "native-country": "India"
+      },
+      "response": {
+        "prediction": ">50K",
+        "predicted_class": 1,
+        "probability_gt_50k": 0.99494,
+        "probability_le_50k": 0.00506,
+        "confidence": 0.99494,
+        "threshold": 0.5,
+        "input_warnings": {},
+        "server_latency_ms": 3.821
+      },
+      "client_latency_ms": 4.993
+    },
+    {
+      "label": "4. UNSEEN category: native-country='Wakanda' (never in training)",
+      "request": {
+        "age": 37,
+        "workclass": "Private",
+        "education-num": 13,
+        "marital-status": "Married-civ-spouse",
+        "occupation": "Tech-support",
+        "relationship": "Husband",
+        "race": "Black",
+        "sex": "Male",
+        "capital-gain": 0,
+        "capital-loss": 0,
+        "hours-per-week": 40,
+        "native-country": "Wakanda"
+      },
+      "response": {
+        "prediction": ">50K",
+        "predicted_class": 1,
+        "probability_gt_50k": 0.631654,
+        "probability_le_50k": 0.368346,
+        "confidence": 0.631654,
+        "threshold": 0.5,
+        "input_warnings": {
+          "unseen_categories": {
+            "native-country": "Wakanda"
+          }
+        },
+        "server_latency_ms": 4.051
+      },
+      "client_latency_ms": 5.236
+    },
+    {
+      "label": "5. MISSING fields: occupation and workclass omitted entirely",
+      "request": {
+        "age": 60,
+        "education-num": 7,
+        "marital-status": "Widowed",
+        "relationship": "Not-in-family",
+        "race": "White",
+        "sex": "Female",
+        "capital-gain": 0,
+        "capital-loss": 0,
+        "hours-per-week": 20,
+        "native-country": "United-States"
+      },
+      "response": {
+        "prediction": "<=50K",
+        "predicted_class": 0,
+        "probability_gt_50k": 0.0117,
+        "probability_le_50k": 0.9883,
+        "confidence": 0.9883,
+        "threshold": 0.5,
+        "input_warnings": {
+          "missing_fields": [
+            "workclass",
+            "occupation"
+          ]
+        },
+        "server_latency_ms": 3.864
+      },
+      "client_latency_ms": 5.016
+    }
+  ],
+  "latency": {
+    "n_requests": 100,
+    "endpoint": "/predict (single record)",
+    "mean_ms": 4.913,
+    "median_ms": 4.824,
+    "p95_ms": 5.659,
+    "min_ms": 4.531,
+    "max_ms": 5.847,
+    "stdev_ms": 0.292,
+    "server_side_mean_ms": 3.809,
+    "http_overhead_ms": 1.103
+  },
+  "batch": {
+    "n": 5,
+    "client_total_ms": 5.471,
+    "client_ms_per_record": 1.094,
+    "server_ms_per_record": 0.856
+  }
+}

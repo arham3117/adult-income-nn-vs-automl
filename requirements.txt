@@ -1,0 +1,16 @@
+numpy==2.0.2
+pandas==2.3.3
+scikit-learn==1.6.1
+torch==2.8.0
+matplotlib==3.9.4
+seaborn==0.13.2
+flaml==2.3.6
+xgboost==2.1.4
+lightgbm==4.6.0
+fastapi==0.119.1
+uvicorn==0.39.0
+pydantic==2.12.3
+joblib==1.5.3
+requests==2.32.5
+python-docx==1.2.0
+playwright

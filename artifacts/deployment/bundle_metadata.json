@@ -1,0 +1,33 @@
+{
+  "winner": "automl_flaml",
+  "kind": "flaml",
+  "bundle_path": "artifacts/deployment/model_bundle.joblib",
+  "bundle_size_bytes": 5445408,
+  "bundle_size_mb": 5.45,
+  "test_metrics": {
+    "accuracy": 0.8722074195531871,
+    "precision": 0.777947932618683,
+    "recall": 0.6523972602739726,
+    "f1": 0.7096623981373691,
+    "roc_auc": 0.9277450381225015,
+    "confusion_matrix": {
+      "tn": 6987,
+      "fp": 435,
+      "fn": 812,
+      "tp": 1524
+    },
+    "threshold": 0.5
+  },
+  "estimator_name": "xgb_limitdepth",
+  "hyperparameters": {
+    "n_estimators": 2770,
+    "max_depth": 7,
+    "min_child_weight": 0.09334064712939191,
+    "learning_rate": 0.006200219332923492,
+    "subsample": 0.9960500864194881,
+    "colsample_bylevel": 0.8155116309985395,
+    "colsample_bytree": 0.4012180435147734,
+    "reg_alpha": 0.008095607070800785,
+    "reg_lambda": 0.0665179393932735
+  }
+}
