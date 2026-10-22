@@ -6,6 +6,7 @@ real render of the service while it is serving, not a mock-up.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -16,7 +17,9 @@ from playwright.sync_api import sync_playwright
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import config as C
 
-BASE = "http://127.0.0.1:8000"
+# Override when the server is not on the default port, e.g.
+#   API_URL=http://127.0.0.1:8001 python src/capture_screenshots.py
+BASE = os.environ.get("API_URL", "http://127.0.0.1:8000").rstrip("/")
 SHOTS = C.REPORTS / "screenshots"
 SHOTS.mkdir(parents=True, exist_ok=True)
 

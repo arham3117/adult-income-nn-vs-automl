@@ -6,6 +6,7 @@ measured against a server that is already warm.
 from __future__ import annotations
 
 import json
+import os
 import statistics
 import sys
 import time
@@ -16,7 +17,9 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import config as C
 
-BASE = "http://127.0.0.1:8000"
+# Override when the server is not on the default port, e.g.
+#   API_URL=http://127.0.0.1:8001 python src/client_demo.py
+BASE = os.environ.get("API_URL", "http://127.0.0.1:8000").rstrip("/")
 N_TIMED = 100
 
 # Five raw records, chosen to span the decision space and the edge cases.

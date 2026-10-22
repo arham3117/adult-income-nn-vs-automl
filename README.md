@@ -337,7 +337,8 @@ adult-income-nn-vs-automl/
 | `XGBoostError: Library not loaded: @rpath/libomp.dylib` | macOS missing OpenMP runtime | `brew install libomp` |
 | `ModuleNotFoundError: No module named 'torch'` | venv not activated, or installed into a different interpreter | `source .venv/bin/activate`, re-run §3.3 |
 | `ModuleNotFoundError: No module named 'src'` | Running from the wrong directory | `cd` to the project root first |
-| `ERROR: [Errno 48] Address already in use` | Port 8000 is taken | Use another port: `--port 8001` |
+| `ERROR: [Errno 48] Address already in use` | Port 8000 is taken | Start on another port: `--port 8001`, then point the client scripts at it: `API_URL=http://127.0.0.1:8001 python src/client_demo.py` |
+| `ConnectionRefusedError` from `client_demo.py` | Server not running, or running on a different port | Start the server first ([§4.1](#41-start-the-server)); if it is not on 8000, set `API_URL` as above |
 | `FileNotFoundError: model_bundle.joblib` | Bundle missing from the clone | Run `python src/export_model.py` (needs §5 steps 1–4 first) |
 | `FileNotFoundError: processed_splits.npz` | Running step 2+ before step 1 | Run `python src/data_prep.py` first |
 | Playwright `Executable doesn't exist` | Browser not downloaded | `python -m playwright install chromium` |
