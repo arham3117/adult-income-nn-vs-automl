@@ -155,7 +155,7 @@ def train_model(cfg: TrainConfig, X_train, y_train, X_val, y_val,
 
     t0 = time.perf_counter()
     for epoch in range(1, cfg.max_epochs + 1):
-        # ---- train ----
+        # training pass
         model.train()
         run_loss, run_correct, run_n = 0.0, 0, 0
         for xb, yb in loader:
@@ -171,7 +171,7 @@ def train_model(cfg: TrainConfig, X_train, y_train, X_val, y_val,
             run_n += xb.size(0)
         tr_loss, tr_acc = run_loss / run_n, run_correct / run_n
 
-        # ---- validate ----
+        # validation pass
         model.eval()
         with torch.no_grad():
             v_logits = model(Xva)
@@ -199,9 +199,9 @@ def train_model(cfg: TrainConfig, X_train, y_train, X_val, y_val,
 
     elapsed = time.perf_counter() - t0
 
-    # Restore the best-validation weights ONLY when early stopping is enabled -
-    # otherwise the "no early stopping" ablation would silently inherit its main
-    # benefit (best-checkpoint restoration) and the comparison would be dishonest.
+    # Only put the best weights back if early stopping is on. Otherwise the
+    # "no early stopping" run would still get the benefit of keeping the best
+    # checkpoint, and the comparison would not be fair.
     if cfg.early_stopping and best_state is not None:
         model.load_state_dict(best_state)
 

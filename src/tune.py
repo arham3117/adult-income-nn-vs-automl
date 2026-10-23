@@ -23,7 +23,7 @@ from evaluate import (classification_metrics, load_splits, plot_confusion,
 from model import TrainConfig, architecture_table, predict_proba, train_model
 
 # --------------------------------------------------------------------------- #
-# The sweep. C1 is the Step-2 baseline, repeated here as the reference point.
+# The configs I tried. C1 is the same as my Step 2 baseline, used as the reference.
 # --------------------------------------------------------------------------- #
 CONFIGS = [
     TrainConfig(name="C1-baseline", hidden_sizes=(128, 64), dropout=0.3, lr=1e-3,
@@ -71,7 +71,7 @@ def main() -> None:
                             "test_metrics": tm, "history": res.history,
                             "epochs_run": res.epochs_run, "best_epoch": res.best_epoch,
                             "train_time_sec": res.train_time_sec, "n_params": res.n_params}
-        # Final-epoch train accuracy vs val accuracy exposes overfitting.
+        # gap between train and val accuracy shows overfitting
         gap = res.history["train_acc"][-1] - res.history["val_acc"][-1]
         rows.append({
             "config": cfg.name,
@@ -101,10 +101,10 @@ def main() -> None:
     best_cfg = next(c for c in CONFIGS if c.name == best_name)
     print(f"\nBest configuration by validation ROC-AUC: {best_name}")
 
-    # ---- noise floor -------------------------------------------------------- #
-    # The configurations land within a few ten-thousandths of each other, so before
-    # declaring any factor "important" we measure how much the metric moves from
-    # seed randomness alone. Anything smaller than this band is not a real effect.
+    # All the configs land within a few ten-thousandths of each other, which is
+    # close enough that randomness could explain it. So before I call any factor
+    # important, I retrain one config under different seeds to see how much the
+    # score moves on its own. Anything smaller than that is not a real effect.
     import numpy as np
     from model import set_seed
     noise_runs = []
@@ -127,7 +127,7 @@ def main() -> None:
     }
     print(f"  seed-only spread: {noise_band}")
 
-    # ---- factor-effect analysis -------------------------------------------- #
+    # how much does each factor actually move the score?
     def grp(names):
         return df[df["config"].isin(names)]["val_roc_auc"]
 
@@ -171,7 +171,7 @@ def main() -> None:
             "exceeds_seed_noise_f1": bool(
                 (sub["val_f1"].max() - sub["val_f1"].min()) > noise_band["val_f1"]),
         }
-    # Overfitting evidence: the no-regularisation run keeps its final-epoch weights.
+    # the unregularized run keeps its last-epoch weights, so the gap shows up here
     overfit_evidence = {
         n: {"final_train_acc": detail[n]["history"]["train_acc"][-1],
             "final_val_acc": detail[n]["history"]["val_acc"][-1],
@@ -183,7 +183,7 @@ def main() -> None:
         for n in ("C1-baseline", "C10-no-reg", "C11-dropout-heavy", "C12-batchnorm-wd")
     }
 
-    # ---- retrain and persist the winner ------------------------------------ #
+    # retrain the best config and save it
     model, res = train_model(best_cfg, X_train, y_train, X_val, y_val, verbose=False)
     test_prob = predict_proba(model, X_test)
     best_test = classification_metrics(y_test, test_prob)
@@ -196,7 +196,7 @@ def main() -> None:
                    f"Step 3 - Best NN confusion matrix ({best_name}, test)",
                    C.FIGURES / "step3_best_confusion_matrix.png")
 
-    # ---- figures ----------------------------------------------------------- #
+    # plots
     fig, ax = plt.subplots(figsize=(11, 5))
     d = df.sort_values("val_roc_auc")
     ax.barh(d["config"], d["val_roc_auc"], color="#4C78A8")
@@ -230,7 +230,7 @@ def main() -> None:
     ax.grid(axis="x", alpha=.3)
     fig.tight_layout(); fig.savefig(C.FIGURES / "step3_factor_effects.png", dpi=150); plt.close(fig)
 
-    # ---- write-up ----------------------------------------------------------- #
+    # save the results
     payload = {
         "n_configurations": len(CONFIGS),
         "table": rows,

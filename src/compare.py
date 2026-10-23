@@ -63,7 +63,7 @@ def main() -> None:
     step3 = json.loads((C.RESULTS / "step3_tuning.json").read_text())
     step4 = json.loads((C.RESULTS / "step4_automl.json").read_text())
 
-    # ---------------- neural network (best tuned config) ---------------------
+    # my best tuned network from Step 3
     nn_model, nn_cfg = load_nn(C.ARTIFACTS / "best_nn_model.pt")
     nn_prob = predict_proba(nn_model, X_test_t)
     nn_metrics = classification_metrics(y_test, nn_prob)
@@ -72,10 +72,8 @@ def main() -> None:
     pre_bytes = (C.ARTIFACTS / "preprocessor.joblib").stat().st_size
     nn_total_bytes = nn_model_bytes + pre_bytes
 
-    # ---------------- Step-2 baseline network (third contender) --------------
-    # The assignment asks explicitly for Step 2 to be compared with AutoML, so the
-    # untuned baseline is carried through the same size/latency measurement rather
-    # than only the Step-3 winner.
+    # The assignment says to compare Step 2 with AutoML, so I measure the untuned
+    # baseline here too instead of only the tuned winner.
     b_model, b_cfg = load_nn(C.ARTIFACTS / "baseline_model.pt")
     b_prob = predict_proba(b_model, X_test_t)
     b_metrics = classification_metrics(y_test, b_prob)
@@ -109,20 +107,17 @@ def main() -> None:
     b_lat_single = time_calls(b_single, N_LATENCY_SINGLE)
     b_lat_batch = time_calls(b_batch, N_LATENCY_BATCH)
 
-    # ---------------- FLAML AutoML -------------------------------------------
+    # the AutoML model
     automl = joblib.load(C.ARTIFACTS / "automl_model.joblib")
     ft = automl.feature_transformer
 
-    # --- FLAML category-code bug, and the fix -------------------------------
-    # flaml.automl.data.DataTransformer.transform() re-derives the pandas
-    # Categorical levels from whatever frame it is handed instead of reusing the
-    # levels seen at fit time. A one-row request therefore gets codes numbered
-    # 0..k for only the values in that row, which do not line up with the codes
-    # the model was trained on - predictions come back silently wrong (we measured
-    # 0.27 vs 0.98 for the same record). We therefore pin the training-time
-    # CategoricalDtypes and re-cast after transforming. Casting to a fixed
-    # CategoricalDtype also maps any unseen level to NaN, which XGBoost handles
-    # natively as a missing value - this is the Step 5 unseen-category mechanism.
+    # FLAML bug I ran into. DataTransformer.transform() rebuilds the category
+    # levels from whatever dataframe you pass it instead of reusing the ones from
+    # training. So a single row gets different codes than the model was trained on
+    # and the prediction is just wrong, with no error. I got 0.27 vs 0.98 on the
+    # same row. Fix is to save the dtypes from training and cast back after
+    # transforming. Bonus: unseen categories become NaN, which XGBoost already
+    # treats as missing. That is what Step 5 relies on.
     X_tr_raw = pd.read_csv(C.DATA_PROC / "raw_train.csv").drop(columns=["income_binary"])
     t_train = ft.transform(X_tr_raw)
     pinned_dtypes = {c: t_train[c].dtype for c in t_train.columns
@@ -139,7 +134,7 @@ def main() -> None:
     am_prob = est_inner.predict_proba(am_transform(X_raw))[:, 1]
     am_metrics = classification_metrics(y_raw, am_prob)
 
-    # Row-by-row must now agree with the batch pass; assert it rather than hope.
+    # make sure one row at a time gives the same answer as the whole batch
     _row_probs = np.array([est_inner.predict_proba(am_transform(X_raw.iloc[[i]]))[0, 1]
                            for i in range(10)])
     assert np.allclose(_row_probs, am_prob[:10], atol=1e-6), \
@@ -148,9 +143,9 @@ def main() -> None:
     am_naive_prob = automl.predict_proba(X_raw)[:, 1]
     am_naive_metrics = classification_metrics(y_raw, am_naive_prob)
 
-    # The pickled AutoML object is ~35 MB, but most of that is search state
-    # (model_history keeps every estimator's best model). What you would actually
-    # deploy is the winning estimator + transformer + pinned dtypes.
+    # The pickled AutoML object is about 35 MB but most of that is search history.
+    # What I would actually deploy is just the winning model, the transformer and
+    # the dtypes, so that is what I save and measure.
     am_lean_path = C.ARTIFACTS / "automl_deployable.joblib"
     joblib.dump({"feature_transformer": ft, "estimator": est_inner,
                  "pinned_dtypes": pinned_dtypes,
@@ -169,10 +164,9 @@ def main() -> None:
     am_lat_single = time_calls(am_single, N_LATENCY_SINGLE)
     am_lat_batch = time_calls(am_batch, N_LATENCY_BATCH)
 
-    # ---------------- training time ------------------------------------------
-    # For the NN the honest number is the whole manual search (12 configs + the
-    # final retrain), because that human-directed search is what produced the
-    # model - the same role the FLAML time budget plays for AutoML.
+    # Training time. For the network I count the whole sweep (12 configs plus the
+    # final retrain), since that is what actually produced the model. It is the
+    # same role FLAML's time budget plays.
     nn_sweep_time = sum(r["train_time_s"] for r in step3["table"])
     nn_final_time = step3["best_config_train_time_sec"]
     am_search_time = step4["actual_search_time_s"]
@@ -223,7 +217,7 @@ def main() -> None:
     df = pd.DataFrame(rows)
     df.to_csv(C.RESULTS / "step4_comparison.csv", index=False)
 
-    # ---------------- winner --------------------------------------------------
+    # pick the winner
     winner = "automl_flaml" if am_metrics["roc_auc"] > nn_metrics["roc_auc"] else "neural_network"
     margin = abs(am_metrics["roc_auc"] - nn_metrics["roc_auc"])
     seed_noise = step3["seed_noise_band"]["val_roc_auc"]

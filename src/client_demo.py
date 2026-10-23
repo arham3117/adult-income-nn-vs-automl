@@ -22,7 +22,7 @@ import config as C
 BASE = os.environ.get("API_URL", "http://127.0.0.1:8000").rstrip("/")
 N_TIMED = 100
 
-# Five raw records, chosen to span the decision space and the edge cases.
+# Five raw records. I picked these to cover both classes plus the edge cases.
 SAMPLES = [
     {"_label": "1. Young clerical worker, low hours",
      "age": 25, "workclass": "Private", "education-num": 9,
@@ -78,7 +78,7 @@ def main() -> None:
             print(f"      warnings: {body['input_warnings']}")
         print()
 
-    # ---- end-to-end latency over a warm server ------------------------------
+    # time the requests once the server is warmed up
     warm = {k: v for k, v in SAMPLES[1].items() if not k.startswith("_")}
     for _ in range(10):
         requests.post(f"{BASE}/predict", json=warm, timeout=30)
@@ -104,7 +104,7 @@ def main() -> None:
         "http_overhead_ms": round(statistics.mean(times) - statistics.mean(server_times), 3),
     }
 
-    # Batch endpoint for throughput context.
+    # try the batch endpoint too
     batch_payload = {"records": [{k: v for k, v in s.items() if not k.startswith("_")}
                                  for s in SAMPLES]}
     t0 = time.perf_counter()

@@ -62,10 +62,9 @@ def main() -> None:
             "kind": "flaml",
             "feature_transformer": lean["feature_transformer"],
             "estimator": lean["estimator"],
-            # Training-time Categorical levels. Re-casting to these after FLAML's
-            # transform is mandatory: FLAML re-derives levels per call, which
-            # silently corrupts single-row inference. It also maps unseen levels
-            # to NaN, which XGBoost treats as missing.
+            # The category levels from training. I have to cast back to these
+            # after FLAML's transform, otherwise single-row predictions are wrong.
+            # It also turns unseen values into NaN, which XGBoost handles.
             "pinned_dtypes": lean["pinned_dtypes"],
             "estimator_name": lean["estimator_name"],
             "hyperparameters": lean["best_config"],

@@ -87,13 +87,13 @@ def clean(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     df[C.TARGET] = df[C.TARGET].astype(str).str.rstrip(".").str.strip()
     log["label_values_after_normalisation"] = sorted(df[C.TARGET].unique().tolist())
 
-    # Some rows in adult.test are blank/placeholder; drop rows with no label.
+    # some rows in adult.test are blank, drop anything without a label
     df = df[df[C.TARGET].isin(["<=50K", ">50K"])].copy()
     log["rows_after_label_filter"] = int(len(df))
 
     df["income_binary"] = (df[C.TARGET] == ">50K").astype(int)
 
-    # '?' already mapped to NaN at read time; record the pattern.
+    # '?' was already read as NaN, just record where it showed up
     missing = df[C.RAW_COLUMNS].isna().sum()
     log["missing_per_column"] = {k: int(v) for k, v in missing.items() if v > 0}
 

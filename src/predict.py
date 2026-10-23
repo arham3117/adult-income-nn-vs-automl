@@ -63,7 +63,7 @@ def _coerce(records: Iterable[dict], schema: dict) -> tuple[pd.DataFrame, list[d
 
             if col in schema["numeric_features"]:
                 if val is None:
-                    # Median from the TRAINING split - never from the request.
+                    # use the median from training, never from the request
                     row[col] = schema["numeric_defaults"][col]
                 else:
                     try:
@@ -73,7 +73,7 @@ def _coerce(records: Iterable[dict], schema: dict) -> tuple[pd.DataFrame, list[d
                         row[col] = schema["numeric_defaults"][col]
                 rng = schema["numeric_ranges"][col]
                 if row[col] < rng["min"] or row[col] > rng["max"]:
-                    # Kept, not clipped: trees extrapolate flat beyond a split.
+                    # flag it but don't clip, trees just flatten out past a split
                     note["out_of_range"][col] = row[col]
             else:
                 if val is not None:
@@ -89,9 +89,9 @@ def _coerce(records: Iterable[dict], schema: dict) -> tuple[pd.DataFrame, list[d
 def _proba(bundle: dict, X: pd.DataFrame) -> np.ndarray:
     if bundle["kind"] == "flaml":
         t = bundle["feature_transformer"].transform(X).copy()
-        # Re-cast to the TRAINING-time Categorical levels. Without this FLAML
-        # renumbers the codes per request and predictions are silently wrong;
-        # with it, any unseen level becomes NaN -> handled as missing by XGBoost.
+        # Cast back to the category levels from training. Without this FLAML
+        # renumbers the codes on every request and the answers come out wrong.
+        # With it, anything unseen becomes NaN, which XGBoost treats as missing.
         for col, dt in bundle["pinned_dtypes"].items():
             if col in t.columns:
                 t[col] = t[col].astype(dt)

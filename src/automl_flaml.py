@@ -63,10 +63,10 @@ def main() -> None:
     search_time = time.perf_counter() - t0
     print(f"\nSearch finished in {search_time:.1f}s. Best estimator: {automl.best_estimator}")
 
-    # ---- leaderboard: each estimator's best configuration --------------------
-    # best_model_for_estimator() returns the *inner* learner, which expects the
-    # features FLAML's own DataTransformer produces (object -> pandas category,
-    # NaN -> '__NAN__'), not the raw frame. Transform once and reuse.
+    # Leaderboard: the best config FLAML found for each estimator.
+    # best_model_for_estimator() returns the raw model, which wants the features
+    # FLAML's own transformer produces, not the raw dataframe. So transform once
+    # here and reuse it.
     ft = automl.feature_transformer
     X_va_t, X_te_t = ft.transform(X_va), ft.transform(X_te)
 
@@ -105,7 +105,7 @@ def main() -> None:
     leaderboard.sort(key=lambda r: r.get("val_roc_auc", r.get("val_roc_auc_flaml", -1)),
                      reverse=True)
 
-    # ---- trial history from the FLAML log ------------------------------------
+    # pull the trial history out of the FLAML log
     trials = []
     try:
         with open(log_file) as fh:
@@ -128,7 +128,7 @@ def main() -> None:
     except Exception as exc:
         print(f"  (could not parse FLAML log: {exc})")
 
-    # ---- selected model: full test evaluation + persistence -------------------
+    # evaluate the model FLAML picked and save it
     p_te = automl.predict_proba(X_te)[:, 1]
     p_va = automl.predict_proba(X_va)[:, 1]
     test_metrics = classification_metrics(y_te, p_te)
@@ -162,7 +162,7 @@ def main() -> None:
     (C.RESULTS / "step4_automl.json").write_text(json.dumps(payload, indent=2, default=str))
     np.save(C.ARTIFACTS / "automl_test_proba.npy", p_te)
 
-    # ---- Markdown -------------------------------------------------------------
+    # write the markdown version
     L = ["# Step 4 - AutoML (FLAML) Results", "",
          f"Framework: **FLAML {payload['flaml_version']}** | metric: **roc_auc** | "
          f"time budget: **{TIME_BUDGET}s** | actual search: **{search_time:.1f}s** | "

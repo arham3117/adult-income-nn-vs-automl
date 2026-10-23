@@ -47,7 +47,7 @@ class RawRecord(BaseModel):
     model_config = {"populate_by_name": True, "extra": "allow"}
 
     def to_raw(self) -> dict:
-        # by_alias gives back the hyphenated column names the model expects.
+        # by_alias gives back the hyphenated names like 'education-num'
         return {k: v for k, v in self.model_dump(by_alias=True).items() if k != "extra"}
 
 
