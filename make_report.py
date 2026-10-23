@@ -1,4 +1,4 @@
-"""Step 6 - Assemble the Word report from the artefacts every step produced.
+"""Step 6. Assemble the Word report from the artefacts every step produced.
 
 Every number in the document is read from results/*.json - nothing is typed by
 hand, so the report cannot drift from the experiments.
@@ -130,7 +130,7 @@ def main() -> None:
     doc.add_paragraph()
     meta_rows = [
         ["Dataset", "UCI Adult Census Income (UCI id 2 / OpenML 1590), 48,842 raw rows"],
-        ["Task", "Binary classification - does annual income exceed $50K?"],
+        ["Task", "Binary classification. Does annual income exceed $50K?"],
         ["Deep learning framework", "PyTorch 2.8.0 (custom architecture and training loop)"],
         ["AutoML framework", f"FLAML {s4['flaml_version']}"],
         ["Serving stack", "FastAPI + uvicorn on localhost:8000"],
@@ -161,11 +161,11 @@ def main() -> None:
     para(doc,
          "Three findings are worth flagging up front. First, on this dataset the choice of "
          "regularisation was the only hyper-parameter factor whose effect clearly exceeded seed "
-         "noise - depth, width, learning rate and batch size all moved validation ROC-AUC by less "
+         "noise. Depth, width, learning rate and batch size all moved validation ROC-AUC by less "
          "than a thousandth. Second, gradient-boosted trees remain the stronger inductive bias for "
-         "mixed-type tabular data; a plain MLP on one-hot features does not close that gap. "
+         "mixed-type tabular data. A plain MLP on one-hot features does not close that gap. "
          "Third, I found and fixed a genuine correctness bug in FLAML's inference path that would "
-         "have silently corrupted every single-row prediction in production; it is documented in "
+         "have silently corrupted every single-row prediction in production. It is documented in "
          "Step 5.")
 
     key = [
@@ -182,12 +182,12 @@ def main() -> None:
     # =====================================================================
     # STEP 1
     # =====================================================================
-    h(doc, "Step 1 - Dataset and Reproducible Preprocessing Pipeline", 1)
+    h(doc, "Step 1. Dataset and Reproducible Preprocessing Pipeline", 1)
     cl = s1["cleaning"]
     para(doc,
          "I downloaded the Adult Census Income dataset directly from the UCI repository "
          "(archive.ics.uci.edu/static/public/2/adult.zip) rather than through OpenML, so the "
-         "pipeline has no dependency on a third-party package staying available; the code keeps "
+         "pipeline has no dependency on a third-party package staying available. The code keeps "
          "an OpenML (id 1590) fallback. The archive ships two files, adult.data (32,561 rows) and "
          "adult.test (16,281 rows). I concatenated them into a single pool of "
          f"{cl['rows_raw']:,} rows and then created my own split.")
@@ -198,7 +198,7 @@ def main() -> None:
          "writes labels with a trailing period ('<=50K.'). Merging and re-splitting gives me "
          "three sets drawn from one distribution, a proper validation set for tuning, and a seed "
          "that makes the partition reproducible. The cost is that my numbers are not directly "
-         "comparable to papers that use the original split - an acceptable trade because every "
+         "comparable to papers that use the original split. That is an acceptable trade because every "
          "model in this report is compared on my split, not against the literature.")
 
     h(doc, "1.2 Cleaning decisions", 2)
@@ -216,10 +216,10 @@ def main() -> None:
          "A duplicate that lands in both train and test leaks the answer and inflates the "
          "test score."],
         ["Dropped fnlwgt", "Removed.", "It is a census sampling weight describing how many "
-         "people the row represents in the population - a property of the survey design, not of "
+         "people the row represents in the population. It is a property of the survey design, not of "
          "the individual, so it cannot legitimately predict that individual's income."],
         ["Dropped education", "Removed, kept education-num.", "The two encode exactly the same "
-         "variable; education-num is already an ordinal integer, so keeping the string version "
+         "variable. education-num is already an ordinal integer, so keeping the string version "
          "would add 16 redundant one-hot columns."],
         ["Kept capital-gain / capital-loss", "Kept despite ~91% zeros.",
          "Zero-inflated but highly informative: a non-zero capital gain is one of the strongest "
@@ -231,7 +231,7 @@ def main() -> None:
     para(doc,
          "I used a 60/20/20 stratified split with random_state=42, performed in two calls "
          "(train vs. the rest, then that remainder halved). Stratification matters here because "
-         "the dataset is imbalanced at roughly 24/76; the table below confirms the balance is "
+         "the dataset is imbalanced at roughly 24/76. The table below confirms the balance is "
          "preserved to within 0.01 percentage points across all three splits.")
     sp = s1["splits"]
     table(doc, ["Split", "Rows", "<=50K (class 0)", ">50K (class 1)", "% >50K"],
@@ -263,7 +263,7 @@ def main() -> None:
          "One-hot rather than ordinal because these categories have no natural order. "
          "handle_unknown='ignore' is a deliberate deployment decision: an unseen category "
          "produces an all-zero block instead of an exception (see Step 5)."],
-        ["Fit scope", "fit on train only; val/test transformed",
+        ["Fit scope", "fit on train only, val/test transformed",
          "Fitting the scaler or the encoder on all the data would leak test-set statistics into "
          "training and produce an optimistic score."],
     ]
@@ -274,12 +274,13 @@ def main() -> None:
     # =====================================================================
     # STEP 2
     # =====================================================================
-    h(doc, "Step 2 - Deep Feed-Forward Network Built From Scratch", 1)
+    h(doc, "Step 2. Deep Feed-Forward Network Built From Scratch", 1)
     cfg2 = s2["config"]
     para(doc,
          "I implemented the model in PyTorch as an explicit nn.Module with a hand-written "
-         "training loop - forward pass, loss, zero_grad, backward, optimiser step - with no "
-         "high-level fit() helper, no pretrained weights and no AutoML anywhere in this step. "
+         "training loop. The loop runs the forward pass, computes the loss, then calls zero_grad, "
+         "backward and the optimiser step. There is no high-level fit() helper, no pretrained "
+         "weights and no AutoML anywhere in this step. "
          "The architecture is a fully-connected network with two hidden layers.")
 
     h(doc, "2.1 (a) Architecture and parameter count", 2)
@@ -301,27 +302,27 @@ def main() -> None:
          "Large enough for efficient vectorised passes over 29k rows, small enough to give ~114 "
          "gradient updates per epoch."],
         ["Dropout", str(cfg2["dropout"]),
-         "The main regulariser; Step 3 shows removing it costs real accuracy."],
+         "The main regulariser. Step 3 shows removing it costs real accuracy."],
         ["Epoch budget", f"max {cfg2['max_epochs']}, early stopping patience {cfg2['patience']}",
          "Training stops when validation loss stops improving and the best-validation weights "
          "are restored, so the reported model is never the overfitted final epoch."],
         ["Output", "1 logit",
-         "A single logit with a 0.5 threshold; the probability is recovered with a sigmoid."],
+         "A single logit with a 0.5 threshold. The probability is recovered with a sigmoid."],
     ]
     table(doc, ["Setting", "Value", "Reasoning"], train_rows, widths=[1.2, 1.7, 3.8])
     para(doc,
-         f"Training ran {s2['epochs_run']} epochs in {s2['train_time_sec']:.1f} seconds on CPU; "
+         f"Training ran {s2['epochs_run']} epochs in {s2['train_time_sec']:.1f} seconds on CPU. "
          f"the best validation loss occurred at epoch {s2['best_epoch']}, after which early "
          f"stopping halted the run.")
 
     h(doc, "2.2 (b) Training and validation curves", 2)
     figure(doc, C.FIGURES / "step2_curves.png",
-           "Figure 1 - Baseline network: training and validation loss (left) and accuracy "
+           "Figure 1. Baseline network: training and validation loss (left) and accuracy "
            "(right) per epoch.")
     para(doc,
          "The curves show a clean, fast fit: validation loss drops sharply over the first three "
          "epochs and then flattens. Training loss continues to creep down while validation loss "
-         "plateaus and begins to drift upward - the classic onset of overfitting, and exactly "
+         "plateaus and begins to drift upward. That is the classic onset of overfitting, and exactly "
          "what the early-stopping criterion is there to catch. The gap between the two accuracy "
          "traces stays small, which tells me the 0.3 dropout is doing its job at this capacity.")
 
@@ -333,11 +334,11 @@ def main() -> None:
            ["Precision", f"{tm['precision']:.4f}",
             "Of everyone flagged as >50K, 73% really are."],
            ["Recall", f"{tm['recall']:.4f}",
-            "It finds 62% of the true >50K earners - the weakest metric, driven by the class "
+            "It finds 62% of the true >50K earners. This is the weakest metric, driven by the class "
             "imbalance and the 0.5 threshold."],
            ["F1", f"{tm['f1']:.4f}", "Harmonic mean of the two above."],
            ["ROC-AUC", f"{tm['roc_auc']:.4f}",
-            "Threshold-independent ranking quality; the most trustworthy single number here "
+            "Threshold-independent ranking quality. It is the most trustworthy single number here "
             "because it is unaffected by the 24/76 imbalance."]],
           widths=[1.1, 1.0, 4.6], font_size=10)
 
@@ -351,19 +352,19 @@ def main() -> None:
          "false positives. The model is conservative about predicting the minority class, which "
          "is the expected consequence of optimising unweighted cross-entropy on imbalanced data. "
          "If the application cared more about catching high earners than about false alarms, the "
-         "right fix would be to lower the decision threshold or apply class weights - I kept the "
+         "right fix would be to lower the decision threshold or apply class weights. I kept the "
          "0.5 threshold so that every model in this report is compared on identical terms.")
     figure(doc, C.FIGURES / "step2_confusion_matrix.png",
-           "Figure 2 - Baseline confusion matrix on the test set.", width=4.5)
+           "Figure 2. Baseline confusion matrix on the test set.", width=4.5)
     figure(doc, C.FIGURES / "step2_roc.png",
-           "Figure 3 - Baseline ROC curve on the test set.", width=4.5)
+           "Figure 3. Baseline ROC curve on the test set.", width=4.5)
 
     doc.add_page_break()
 
     # =====================================================================
     # STEP 3
     # =====================================================================
-    h(doc, "Step 3 - Manual Hyper-parameter Tuning", 1)
+    h(doc, "Step 3. Manual Hyper-parameter Tuning", 1)
     para(doc,
          f"I trained {s3['n_configurations']} configurations, each a controlled variation of the "
          "baseline so that an observed difference can be attributed to a specific factor rather "
@@ -383,7 +384,7 @@ def main() -> None:
             r["val_roc_auc"], r["train_val_acc_gap"]] for r in rows],
           font_size=7)
     figure(doc, C.FIGURES / "step3_config_auc.png",
-           "Figure 4 - Validation ROC-AUC for every configuration.")
+           "Figure 4. Validation ROC-AUC for every configuration.")
 
     h(doc, "3.2 Establishing a noise floor first", 2)
     nb = s3["seed_noise_band"]
@@ -407,12 +408,12 @@ def main() -> None:
     table(doc, ["Factor", "AUC spread", "Acc spread", "F1 spread", "Exceeds seed noise?"],
           [[k, f"{v['val_roc_auc_spread']:.4f}", f"{v['val_accuracy_spread']:.4f}",
             f"{v['val_f1_spread']:.4f}",
-            "Yes" if v["exceeds_seed_noise_auc"] else "No - within noise"]
+            "Yes" if v["exceeds_seed_noise_auc"] else "No, within noise"]
            for k, v in sorted(fm.items(),
                               key=lambda kv: kv[1]["val_roc_auc_spread"], reverse=True)],
           widths=[2.3, 1.1, 1.1, 1.0, 1.3], font_size=9)
     figure(doc, C.FIGURES / "step3_factor_effects.png",
-           "Figure 5 - Spread in validation ROC-AUC attributable to each factor.")
+           "Figure 5. Spread in validation ROC-AUC attributable to each factor.")
 
     oe = s3["overfitting_evidence"]
     c10, c1 = oe["C10-no-reg"], oe["C1-baseline"]
@@ -428,7 +429,7 @@ def main() -> None:
          "The mechanism is visible in the unregularised run (C10: no dropout, no weight decay, no "
          f"early stopping). It reaches a training accuracy of {c10['final_train_acc']:.4f} while "
          f"its validation accuracy sits at {c10['final_val_acc']:.4f}, and its validation loss "
-         f"ends {c10['val_loss_rise_after_best']:+.4f} above its own minimum - it trains straight "
+         f"ends {c10['val_loss_rise_after_best']:+.4f} above its own minimum. It trains straight "
          f"past the optimum and memorises. The regularised baseline keeps the same gap at "
          f"{c1['final_train_acc'] - c1['final_val_acc']:.4f}.")
     table(doc, ["Config", "Final train acc", "Final val acc", "Final val loss", "Min val loss",
@@ -438,13 +439,13 @@ def main() -> None:
             f"{v['val_loss_rise_after_best']:+.4f}"] for k, v in oe.items()],
           widths=[1.7, 1.1, 1.0, 1.1, 1.0, 1.0], font_size=9)
     figure(doc, C.FIGURES / "step3_regularisation.png",
-           "Figure 6 - Regularisation and the train/validation gap. The unregularised run's "
+           "Figure 6. Regularisation and the train/validation gap. The unregularised run's "
            "validation loss turns upward while its training loss keeps falling.")
 
     para(doc,
          "Why this ordering makes sense: with 29k training rows and only 91 encoded features, the "
          "hypothesis space is easy to fit, so the binding constraint is not capacity or "
-         "optimisation - it is whether the model is stopped before it starts memorising. Adam is "
+         "optimisation. It is whether the model is stopped before it starts memorising. Adam is "
          "adaptive enough to absorb a 30x change in learning rate, and with early stopping active "
          "a larger or deeper network simply stops sooner rather than scoring better. That also "
          "explains why the best configuration by validation ROC-AUC "
@@ -452,19 +453,19 @@ def main() -> None:
          "is statistically indistinguishable from the plain baseline: on this data the MLP has "
          "hit a ceiling that more tuning of this kind will not lift.")
     figure(doc, C.FIGURES / "step3_best_curves.png",
-           f"Figure 7 - Training curves of the best configuration ({s3['best_config_name']}).")
+           f"Figure 7. Training curves of the best configuration ({s3['best_config_name']}).")
 
     doc.add_page_break()
 
     # =====================================================================
     # STEP 4
     # =====================================================================
-    h(doc, "Step 4 - AutoML Benchmark and Head-to-Head Comparison", 1)
+    h(doc, "Step 4. AutoML Benchmark and Head-to-Head Comparison", 1)
     para(doc,
          f"I used FLAML {s4['flaml_version']} (Microsoft Research). I chose it over AutoGluon and "
          "auto-sklearn for three reasons: it installs cleanly on Python 3.9 / Apple Silicon "
-         "where auto-sklearn does not; it takes an explicit wall-clock budget, which makes the "
-         "'training time' comparison meaningful and bounded; and its cost-frugal search reports a "
+         "where auto-sklearn does not. It takes an explicit wall-clock budget, which makes the "
+         "'training time' comparison meaningful and bounded. Its cost-frugal search also reports a "
          "per-estimator best configuration that I can turn into a genuine leaderboard.")
 
     h(doc, "4.1 Keeping the comparison honest", 2)
@@ -501,15 +502,15 @@ def main() -> None:
     para(doc,
          "The three boosted-tree families cluster tightly at the top and the two bagged-tree "
          "families sit about a point behind. The outlier is lrl1 (L1-regularised logistic "
-         "regression) at 0.4851 validation AUC - worse than chance. That is not a property of "
-         "logistic regression; it is that FLAML feeds it the same unscaled raw features it gives "
+         "regression) at 0.4851 validation AUC, which is worse than chance. That is not a property of "
+         "logistic regression. It is that FLAML feeds it the same unscaled raw features it gives "
          "the trees, and the solver overflows on capital-gain values up to 99,999. It is a useful "
          "reminder that AutoML frameworks are not uniformly careful across model families, and "
          "that a leaderboard entry can be broken rather than merely bad.", italic=True)
 
     h(doc, "4.3 Selected model and its hyper-parameters", 2)
     para(doc,
-         f"FLAML selected {s4['selected_estimator']} - gradient-boosted trees with a bounded "
+         f"FLAML selected {s4['selected_estimator']}, gradient-boosted trees with a bounded "
          f"depth. Its chosen configuration:")
     hp = s4["selected_hyperparameters"] or {}
     table(doc, ["Hyper-parameter", "Value"],
@@ -521,7 +522,7 @@ def main() -> None:
          "schedule, with depth capped at "
          f"{hp.get('max_depth')} and aggressive column subsampling "
          f"(colsample_bytree {hp.get('colsample_bytree', 0):.3f}). FLAML converged on many weak, "
-         "decorrelated learners rather than a few strong ones - the standard recipe for squeezing "
+         "decorrelated learners rather than a few strong ones. That is the standard recipe for squeezing "
          "the last point out of tabular data, and a search no human would run by hand.")
 
     h(doc, "4.4 Head-to-head comparison", 2)
@@ -529,18 +530,18 @@ def main() -> None:
          "The assignment asks specifically that Step 2 be compared with the AutoML system, so I "
          "carry three models through the identical measurement: the untuned Step-2 baseline, the "
          "best tuned network from Step 3, and FLAML's selection. Sizes and latencies are measured "
-         "end to end - model plus the preprocessing it needs - because that is what has to be "
-         "deployed.")
+         "end to end, meaning the model plus the preprocessing it needs, because that is what has "
+         "to be deployed.")
     table(doc, ["Metric", "Step-2 baseline MLP", "Best tuned MLP (Step 3)", "FLAML AutoML"],
           [[r["metric"], r["nn_step2_baseline"], r["neural_network"], r["automl_flaml"]]
            for r in s4c["comparison_table"]],
           widths=[2.6, 1.5, 1.5, 1.5], font_size=9)
     figure(doc, C.FIGURES / "step4_metric_comparison.png",
-           "Figure 8 - Test accuracy, F1 and ROC-AUC: hand-built network vs. AutoML.")
+           "Figure 8. Test accuracy, F1 and ROC-AUC: hand-built network vs. AutoML.")
     figure(doc, C.FIGURES / "step4_roc_comparison.png",
-           "Figure 9 - ROC curves on the test set.", width=4.8)
+           "Figure 9. ROC curves on the test set.", width=4.8)
     figure(doc, C.FIGURES / "step4_cost_comparison.png",
-           "Figure 10 - Deployment cost: artefact size and single-row latency.")
+           "Figure 10. Deployment cost: artefact size and single-row latency.")
 
     b2 = s4c["neural_network_step2_baseline"]["test_metrics"]
     d2 = s4c["step2_vs_automl"]
@@ -549,14 +550,14 @@ def main() -> None:
          f"{b2['roc_auc']:.4f} ROC-AUC, {b2['accuracy']:.4f} accuracy and {b2['f1']:.4f} F1, "
          f"against FLAML's {am['roc_auc']:.4f} / {am['accuracy']:.4f} / {am['f1']:.4f}. AutoML is "
          f"ahead by {d2['roc_auc_margin']:.4f} ROC-AUC, {d2['accuracy_margin']:.4f} accuracy and "
-         f"{d2['f1_margin']:.4f} F1 - but it is {d2['automl_slower_x']}x slower per request and "
+         f"{d2['f1_margin']:.4f} F1. But it is {d2['automl_slower_x']}x slower per request and "
          f"{d2['automl_larger_x']}x larger on disk than that baseline. Notably the Step-2 "
          f"baseline is not meaningfully worse than my best tuned network "
          f"({b2['roc_auc']:.4f} vs {nn['roc_auc']:.4f} ROC-AUC, a gap of "
          f"{nn['roc_auc'] - b2['roc_auc']:.4f} against a {s4c['seed_noise_band_roc_auc']:.4f} "
          f"noise band), and it actually posts a higher F1 ({b2['f1']:.4f} vs {nn['f1']:.4f}) "
          f"because it trades precision for recall. Twelve configurations of manual tuning bought "
-         f"essentially nothing on this dataset - which is itself the most useful result in "
+         f"essentially nothing on this dataset, which is itself the most useful result in "
          f"Step 3.", bold=True)
     para(doc,
          f"AutoML wins on every predictive metric. The ROC-AUC margin is "
@@ -574,7 +575,7 @@ def main() -> None:
          "bill, and a 0.7 MB artefact is far easier to ship to an edge device.")
     para(doc,
          "Why did the trees win? Adult is mixed-type tabular data with strong, sharp, "
-         "non-linear thresholds - capital-gain above roughly 5,000, married versus not, education "
+         "non-linear thresholds, such as capital-gain above roughly 5,000, married versus not, education "
          "above a cut point. A decision tree expresses an axis-aligned threshold in a single "
          "split. An MLP over one-hot features has to approximate the same step function with a "
          "weighted sum of smooth ReLU ridges, which costs it both parameters and precision. "
@@ -595,7 +596,7 @@ def main() -> None:
     # =====================================================================
     # STEP 5
     # =====================================================================
-    h(doc, "Step 5 - Deploying the Better Model", 1)
+    h(doc, "Step 5. Deploying the Better Model", 1)
     para(doc,
          f"I exported the winning FLAML model together with everything needed to turn raw input "
          f"into a prediction, and served it with FastAPI behind uvicorn on localhost:8000. The "
@@ -609,11 +610,11 @@ def main() -> None:
          "string columns to pandas Categorical, and the trained XGBoost model consumes the "
          "integer codes behind those categories. But transform() re-derives the category levels "
          "from whatever DataFrame it is handed instead of reusing the levels it saw at fit time. "
-         "Pass it the full test set and the levels come out roughly right by luck; pass it a "
-         "single row - which is exactly what an API does - and 'United-States' becomes code 0 "
+         "Pass it the full test set and the levels come out roughly right by luck. Pass it a "
+         "single row, which is exactly what an API does, and 'United-States' becomes code 0 "
          "instead of code 37, and the model reads a different country entirely.")
     para(doc,
-         "The failure is silent. There is no exception and no warning; the endpoint returns a "
+         "The failure is silent. There is no exception and no warning. The endpoint returns a "
          "confident, well-formed, wrong probability. I caught it by asserting that row-by-row "
          "predictions equal the batch predictions for the same rows, and they did not: one "
          "record scored 0.2739 served individually against 0.9820 in batch.", bold=True)
@@ -629,12 +630,12 @@ def main() -> None:
     h(doc, "5.2 The predict function and the raw-input contract", 2)
     para(doc,
          "src/predict.py exposes predict(records), which accepts raw, unprocessed input: the 12 "
-         "original columns as plain JSON - strings exactly as they appear in the census file, "
-         "numbers as numbers, with no encoding, scaling or imputation done by the caller - and "
+         "original columns as plain JSON, with strings exactly as they appear in the census file "
+         "and numbers as numbers. The caller does no encoding, scaling or imputation. It "
          "returns the label, both class probabilities, the threshold, and a report of anything it "
          "had to repair. It performs the following before inference:")
     bullets(doc, [
-        "Key normalisation and whitespace stripping; '', '?', 'NA', 'null' are all treated as "
+        "Key normalisation and whitespace stripping. The values '', '?', 'NA' and 'null' are all treated as "
         "missing.",
         "Numeric coercion, falling back to the training-split median when a value is absent or "
         "uncoercible (a text value in the age field does not crash the request).",
@@ -674,7 +675,7 @@ def main() -> None:
          "The predictions are sensible: the young part-time service worker and the widowed "
          "respondent with limited education are confidently <=50K, while the self-employed "
          "executive with a $15,024 capital gain is >50K at probability 0.9996. Sample 4 is the "
-         "unseen-category case and sample 5 is the missing-field case; both returned 200 with a "
+         "unseen-category case and sample 5 is the missing-field case. Both returned 200 with a "
          "usable answer and an explicit warning.")
 
     h(doc, "5.5 End-to-end latency", 2)
@@ -699,7 +700,7 @@ def main() -> None:
          f"{lat['http_overhead_ms']} ms is HTTP and JSON overhead. The batch endpoint amortises "
          f"that overhead: {s5['batch']['n']} records cost "
          f"{s5['batch']['client_ms_per_record']} ms each. Nearly all of the server-side cost is "
-         "evaluating 2,770 boosted trees - the same cost that made AutoML 3x slower than the "
+         "evaluating 2,770 boosted trees. That is the same cost that made AutoML 3x slower than the "
          "network in Step 4.", bold=True)
 
     h(doc, "5.6 Handling a feature value the model has never seen", 2)
@@ -707,7 +708,7 @@ def main() -> None:
          "The assignment asks specifically how I would handle a feature the model has never seen "
          "at inference time. There are three distinct versions of that problem and they need "
          "different answers.")
-    para(doc, "Case 1 - an unseen value in a known column (e.g. native-country='Wakanda').",
+    para(doc, "Case 1. An unseen value in a known column (e.g. native-country='Wakanda').",
          bold=True)
     unseen = next((d for d in s5["samples"] if "Wakanda" in json.dumps(d["request"])), None)
     para(doc,
@@ -725,23 +726,23 @@ def main() -> None:
          "The important design point is that the service degrades rather than fails, and says so. "
          "Silently substituting the modal category would be worse than useless: it would invent a "
          "fact about the person and give no signal that anything was wrong.")
-    para(doc, "Case 2 - a missing or malformed value.", bold=True)
+    para(doc, "Case 2. A missing or malformed value.", bold=True)
     para(doc,
          "Numeric fields fall back to the training-split median and categorical fields to the "
          "'Missing' level that the pipeline was explicitly fitted with in Step 1. Because I chose "
          "in Step 1 to treat missingness as a category rather than imputing the mode, the model "
          "has already learned what a missing occupation implies. Sample 5 demonstrates this.")
-    para(doc, "Case 3 - an entirely new column the model was never trained on.", bold=True)
+    para(doc, "Case 3. An entirely new column the model was never trained on.", bold=True)
     para(doc,
          "This one cannot be solved at inference time and should not be papered over. The "
          "ColumnTransformer selects columns by name, so an extra field is ignored and a missing "
-         "required field is imputed; the request still succeeds. But a genuinely new predictive "
+         "required field is imputed, and the request still succeeds. But a genuinely new predictive "
          "feature is information the model has no parameters for, and the only correct response "
          "is to retrain. In a production setting I would: version the input schema and reject "
-         "requests whose schema version is unknown rather than guessing; log the rate of unseen "
-         "categories and out-of-range values per feature as a drift signal; alarm when that rate "
+         "requests whose schema version is unknown rather than guessing. I would log the rate of unseen "
+         "categories and out-of-range values per feature as a drift signal, then alarm when that rate "
          "crosses a threshold, because a spike usually means an upstream system changed its "
-         "encoding, not that the world changed; and retrain on a schedule with the new column "
+         "encoding, not that the world changed. I would retrain on a schedule with the new column "
          "included. The warnings my predict function already returns are the raw material for "
          "exactly that monitoring.")
 
@@ -753,21 +754,21 @@ def main() -> None:
          "via Playwright, and the console images render the verbatim stdout of the server and the "
          "demo client.)", italic=True, size=9)
     figure(doc, C.REPORTS / "screenshots" / "05_uvicorn_server_console.png",
-           "Screenshot 1 - uvicorn serving the model on 127.0.0.1:8000, with the startup log "
+           "Screenshot 1. Uvicorn serving the model on 127.0.0.1:8000, with the startup log "
            "confirming which bundle was loaded and live request lines below.")
     figure(doc, C.REPORTS / "screenshots" / "01_swagger_docs.png",
-           "Screenshot 2 - the auto-generated Swagger UI at /docs showing all four endpoints.")
+           "Screenshot 2. The auto-generated Swagger UI at /docs showing all four endpoints.")
     figure(doc, C.REPORTS / "screenshots" / "03_swagger_predict_executed.png",
-           "Screenshot 3 - a real POST /predict executed from the browser: the senior executive "
+           "Screenshot 3. A real POST /predict executed from the browser: the senior executive "
            "record returns >50K at probability 0.9996.")
     figure(doc, C.REPORTS / "screenshots" / "04_swagger_unseen_category.png",
-           "Screenshot 4 - the unseen-category case executed live: native-country='Wakanda' "
+           "Screenshot 4. The unseen-category case executed live: native-country='Wakanda' "
            "returns HTTP 200 with a prediction and an explicit unseen_categories warning.")
     figure(doc, C.REPORTS / "screenshots" / "06_client_demo_output.png",
-           "Screenshot 5 - client_demo.py driving the live API: five predictions and the "
+           "Screenshot 5. Client_demo.py driving the live API: five predictions and the "
            "end-to-end latency measurement.")
     figure(doc, C.REPORTS / "screenshots" / "02_health_endpoint.png",
-           "Screenshot 6 - the /health endpoint reporting the loaded model and its test ROC-AUC.",
+           "Screenshot 6. The /health endpoint reporting the loaded model and its test ROC-AUC.",
            width=5.5)
 
     doc.add_page_break()
@@ -799,7 +800,7 @@ def main() -> None:
          "ROC-AUC alongside it precisely because it is threshold-free. With a real cost matrix "
          "I would tune the threshold on validation data."),
         ("ROC-AUC is the primary selection metric.",
-         "At 24/76 imbalance, accuracy is dominated by the majority class - a model predicting "
+         "At 24/76 imbalance, accuracy is dominated by the majority class. A model predicting "
          "'<=50K' always scores 76%. ROC-AUC measures ranking quality independent of both the "
          "threshold and the class ratio."),
         ("A 300-second FLAML budget is enough to be representative.",
@@ -812,7 +813,7 @@ def main() -> None:
          "one of them."),
         ("CPU-only timing is representative for this deployment.",
          "The service is a localhost/Colab demo. Both models are small enough that CPU inference "
-         "is the realistic serving mode; a GPU would change the absolute numbers but would favour "
+         "is the realistic serving mode. A GPU would change the absolute numbers but would favour "
          "the network, so my latency comparison is if anything conservative toward AutoML."),
         ("Single-row latency is the metric that matters for serving.",
          "An API receives one record per call. I report batch throughput too, but the single-row "
@@ -832,7 +833,7 @@ def main() -> None:
     # =====================================================================
     h(doc, "Tools Used, and Why", 1)
     tools = [
-        ["Python 3.9", "Language", "The environment available; every library below supports it."],
+        ["Python 3.9", "Language", "The environment available. Every library below supports it."],
         ["PyTorch 2.8.0", "Deep learning",
          "Step 2 requires my own training loop. PyTorch's define-by-run style makes the "
          "forward/backward/step cycle explicit code I wrote rather than a framework callback, "
@@ -840,12 +841,12 @@ def main() -> None:
          "model.fit() would have hidden exactly the loop I was asked to implement."],
         ["scikit-learn 1.6.1", "Preprocessing, splitting, metrics",
          "ColumnTransformer + Pipeline give one fitted object that carries every preprocessing "
-         "decision, which is what makes the Step-5 export honest - the served pipeline is "
+         "decision, which is what makes the Step-5 export honest. The served pipeline is "
          "literally the fitted training pipeline. Also provides stratified splitting and all the "
          "metrics."],
         ["FLAML 2.3.6", "AutoML",
-         "Installs cleanly on Python 3.9 / Apple Silicon (auto-sklearn does not); takes an "
-         "explicit time budget, making the training-time comparison bounded and meaningful; "
+         "Installs cleanly on Python 3.9 / Apple Silicon, where auto-sklearn does not. It takes an "
+         "explicit time budget, making the training-time comparison bounded and meaningful. It is "
          "lighter than AutoGluon, whose default stacked ensembles would have confounded 'AutoML "
          "found a better model' with 'an ensemble of twenty models beats one model'."],
         ["XGBoost 2.1.4 / LightGBM 4.6.0", "Search space for FLAML",
@@ -892,7 +893,7 @@ def main() -> None:
     para(doc, "What I would take away from this:", bold=True)
     bullets(doc, [
         "Measure the noise floor before claiming a factor matters. My first tuning table looked "
-        "like five factors with tiny differences; retraining one configuration under three seeds "
+        "like five factors with tiny differences. Retraining one configuration under three seeds "
         "showed that four of those differences were smaller than random variation. Without that "
         "check I would have confidently reported a ranking of pure noise.",
         "A careless ablation flatters the thing you are ablating. My first 'no early stopping' "
@@ -903,7 +904,7 @@ def main() -> None:
         "internal re-splitting) would have quietly invalidated the comparison, one leaderboard "
         "entry was broken rather than merely weak, and its inference path had a correctness bug "
         "that only showed up under the single-row access pattern that production actually uses.",
-        "Accuracy is not the whole decision. AutoML won on quality; the network won on size, "
+        "Accuracy is not the whole decision. AutoML won on quality. The network won on size, "
         "latency and search cost. Which one I would actually ship depends on the serving budget, "
         "and I said so explicitly rather than treating the highest AUC as automatically correct.",
         "Preprocessing choices made in Step 1 paid off in Step 5. Encoding missingness as a "
@@ -913,8 +914,8 @@ def main() -> None:
     para(doc,
          "If I continued this work, the highest-value next steps would be threshold tuning "
          "against an explicit cost matrix (recall is the clear weak point of both models), "
-         "feature engineering for the MLP - which is the sort of thing a network needs and trees "
-         "do for free - and calibration analysis, since these probabilities are currently served "
+         "feature engineering for the MLP, which is the sort of thing a network needs and trees "
+         "do for free, and calibration analysis, since these probabilities are currently served "
          "to a caller without any check that they mean what they claim.")
 
     out = C.REPORTS / "Intro_AI_Coding_Assignment_Report.docx"
